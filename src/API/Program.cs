@@ -1,3 +1,5 @@
+using System.Text.Json;
+using API.DTOs;
 using Microsoft.EntityFrameworkCore;
 using API.Models;
 
@@ -20,5 +22,102 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/api/devices", async (MasterContext db) =>
+{
+    var devices = await db.Devices
+        .Select(d => new
+        {
+            d.Id,
+            d.Name
+        })
+        .ToListAsync();
+
+    return Results.Ok(devices);
+});
+
+
+app.MapGet("/api/devices/{id}", async (int id, MasterContext db) =>
+{
+    var device = await db.Devices
+        .Include(d => d.DeviceType)
+        .FirstOrDefaultAsync(d => d.Id == id);
+
+    if (device == null)
+        return Results.NotFound();
+
+    var currentUsage = await db.DeviceEmployees
+        .Include(de => de.Employee)
+        .ThenInclude(e => e.Person)
+        .Where(de => de.DeviceId == id && de.ReturnDate == null)
+        .OrderByDescending(de => de.IssueDate)
+        .FirstOrDefaultAsync();
+    
+    var result = new
+    {
+        device.Name,
+        DeviceTypeName = device.DeviceType?.Name,
+        device.IsEnabled,
+        AdditionalProperties = System.Text.Json.JsonSerializer.Deserialize<object>(device.AdditionalProperties),
+        CurrentEmployee = currentUsage == null ? null : new
+        {
+            Id = currentUsage.Employee.Id,
+            Name = $"{currentUsage.Employee.Person.FirstName} {currentUsage.Employee.Person.LastName}"
+        }
+    };
+    return Results.Ok(result);
+});
+
+app.MapPost("/api/devices", async (DeviceDto dto, MasterContext db) =>
+{
+    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(d => d.Name == dto.TypeName);
+    if (deviceType == null)
+        return Results.BadRequest($"Device type '{dto.TypeName}' is not found");
+
+    var device = new Device
+    {
+        Name = dto.Name,
+        IsEnabled = dto.IsEnabled,
+        DeviceTypeId = deviceType.Id,
+        AdditionalProperties = JsonSerializer.Serialize(dto.AdditionalProperties),
+    };
+    
+    db.Devices.Add(device);
+    await db.SaveChangesAsync();
+    return Results.Created($"/api/devices/{device.Id}", new { device.Id });
+    
+});
+
+
+app.MapPut("/api/devices/{id:int}", async (int id, DeviceDto dto, MasterContext db) =>
+{
+    var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
+    if (device == null)
+        return Results.NotFound($"Device with ID {id} not found.");
+
+    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.TypeName);
+    if (deviceType == null)
+        return Results.BadRequest($"Device type '{dto.TypeName}' not found.");
+
+    device.Name = dto.Name;
+    device.IsEnabled = dto.IsEnabled;
+    device.DeviceTypeId = deviceType.Id;
+    device.AdditionalProperties = JsonSerializer.Serialize(dto.AdditionalProperties);
+
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/devices/{id:int}", async (int id, MasterContext db) =>
+{
+    var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
+    if (device == null)
+        return Results.NotFound($"Device with ID {id} not found.");
+    
+    db.Devices.Remove(device);
+    await db.SaveChangesAsync();
+    
+    return Results.NoContent();
+});
 
 app.Run();
