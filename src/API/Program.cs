@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using API.DTOs;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,7 @@ app.MapGet("/api/devices/{id}", async (int id, MasterContext db) =>
         device.Name,
         DeviceTypeName = device.DeviceType?.Name,
         device.IsEnabled,
-        AdditionalProperties = System.Text.Json.JsonSerializer.Deserialize<object>(device.AdditionalProperties),
+        AdditionalProperties = JsonSerializer.Deserialize<object>(device.AdditionalProperties),
         CurrentEmployee = currentUsage == null ? null : new
         {
             Id = currentUsage.Employee.Id,
@@ -69,6 +70,13 @@ app.MapGet("/api/devices/{id}", async (int id, MasterContext db) =>
 
 app.MapPost("/api/devices", async (DeviceDto dto, MasterContext db) =>
 {
+    var context = new ValidationContext(dto);
+    var results = new List<ValidationResult>();
+    if (!Validator.TryValidateObject(dto, context, results, true))
+    {
+        return Results.BadRequest(results);
+    }
+
     var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(d => d.Name == dto.TypeName);
     if (deviceType == null)
         return Results.BadRequest($"Device type '{dto.TypeName}' is not found");
@@ -80,16 +88,23 @@ app.MapPost("/api/devices", async (DeviceDto dto, MasterContext db) =>
         DeviceTypeId = deviceType.Id,
         AdditionalProperties = JsonSerializer.Serialize(dto.AdditionalProperties),
     };
-    
+
     db.Devices.Add(device);
     await db.SaveChangesAsync();
     return Results.Created($"/api/devices/{device.Id}", new { device.Id });
-    
 });
+
 
 
 app.MapPut("/api/devices/{id:int}", async (int id, DeviceDto dto, MasterContext db) =>
 {
+    var context = new ValidationContext(dto);
+    var results = new List<ValidationResult>();
+    if (!Validator.TryValidateObject(dto, context, results, true))
+    {
+        return Results.BadRequest(results);
+    }
+
     var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
     if (device == null)
         return Results.NotFound($"Device with ID {id} not found.");
@@ -107,6 +122,7 @@ app.MapPut("/api/devices/{id:int}", async (int id, DeviceDto dto, MasterContext 
 
     return Results.NoContent();
 });
+
 
 app.MapDelete("/api/devices/{id:int}", async (int id, MasterContext db) =>
 {
