@@ -120,4 +120,55 @@ app.MapDelete("/api/devices/{id:int}", async (int id, MasterContext db) =>
     return Results.NoContent();
 });
 
+
+app.MapGet("/api/employees", async (MasterContext db) =>
+{
+    var employees = await db.Employees
+        .Include(e => e.Person)
+        .Select(e => new
+        {
+            e.Id,
+            FullName = $"{e.Person.FirstName} " +
+                       $"{(string.IsNullOrEmpty(e.Person.MiddleName) ? "" : e.Person.MiddleName + " ")}" +
+                       $"{e.Person.LastName}"
+        })
+        .ToListAsync();
+
+    return Results.Ok(employees);
+});
+
+app.MapGet("/api/employees/{id:int}", async (int id, MasterContext db) =>
+{
+    var employee = await db.Employees
+        .Include(e => e.Person)
+        .Include(e => e.Position)
+        .Where(e => e.Id == id)
+        .Select(e => new
+        {
+            Id = e.Id,
+            Person = new
+            {
+                e.Person.FirstName,
+                e.Person.MiddleName,
+                e.Person.LastName,
+                e.Person.PassportNumber,
+                e.Person.Email,
+                e.Person.PhoneNumber
+            },
+            Salary = e.Salary,
+            Position = new
+            {
+                Id = e.Position.Id,
+                Name = e.Position.Name
+            },
+            HireDate = e.HireDate
+        })
+        .FirstOrDefaultAsync();
+
+    if (employee == null)
+        return Results.NotFound($"Employee with ID {id} not found.");
+
+    return Results.Ok(employee);
+});
+
 app.Run();
