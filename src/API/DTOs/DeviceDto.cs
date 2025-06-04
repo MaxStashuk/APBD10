@@ -12,5 +12,5 @@ public class DeviceDto
     
     public bool IsEnabled { get; set; }
     [Required]
-    public object AdditionalProperties { get; set; }
+    public string AdditionalProperties { get; set; }
 }

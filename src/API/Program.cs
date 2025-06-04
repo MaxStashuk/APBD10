@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                        throw new InvalidOperationException("No connection string found");
 
-builder.Services.AddDbContext<MasterContext>(options => options.UseSqlServer(connectionString));
+// builder.Services.AddDbContext<MasterContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -23,6 +23,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+/*
 app.MapGet("/api/devices", async (MasterContext db) =>
 {
     var devices = await db.Devices
@@ -186,5 +187,6 @@ app.MapGet("/api/employees/{id:int}", async (int id, MasterContext db) =>
 
     return Results.Ok(employee);
 });
+*/
 
 app.Run();

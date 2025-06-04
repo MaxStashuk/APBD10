@@ -15,6 +15,8 @@ public partial class MasterContext : DbContext
     {
     }
 
+    public virtual DbSet<Account> Accounts { get; set; }
+
     public virtual DbSet<Device> Devices { get; set; }
 
     public virtual DbSet<DeviceEmployee> DeviceEmployees { get; set; }
@@ -26,9 +28,33 @@ public partial class MasterContext : DbContext
     public virtual DbSet<Person> People { get; set; }
 
     public virtual DbSet<Position> Positions { get; set; }
-    
+
+    public virtual DbSet<Role> Roles { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.ToTable("Account");
+
+            entity.Property(e => e.Password)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.Username)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.Accounts)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Account_Employee");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.Accounts)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Account_Role");
+        });
+
         modelBuilder.Entity<Device>(entity =>
         {
             entity.ToTable("Device");
@@ -131,6 +157,15 @@ public partial class MasterContext : DbContext
 
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.ToTable("Role");
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(150)
                 .IsUnicode(false);
         });
 
