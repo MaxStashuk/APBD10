@@ -21,7 +21,7 @@ INSERT INTO Person (PassportNumber, FirstName, MiddleName, LastName, PhoneNumber
 
 INSERT INTO Device (Name, IsEnabled, AdditionalProperties, DeviceTypeId) VALUES
 ('HP ProDesk 600 G6', 0, '{"operationSystem": null}', 1),
-('ThinkCentre M75q Gen 5 Tiny', 1, '{"operationSystem": "Windows 11 Pro 23H2"}', 1)
+('ThinkCentre M75q Gen 5 Tiny', 1, '{"operationSystem": "Windows 11 Pro 23H2"}', 1),
 ('Apple Watch Ultra 2', 1, '{"battery": "24%"}', 2),
 ('Raspberry Pi 4', 0, '{"ipAddress": "192.168.0.1", "network": "example"}', 3),
 ('Dell UltraSharp', 1, '{"ports": [{"type": "HDMI", "version": "2.0"}]}', 4),
@@ -40,3 +40,10 @@ INSERT INTO DeviceEmployee (DeviceId, EmployeeId, IssueDate, ReturnDate) VALUES
 (3, 3, '2022-08-05', NULL),
 (4, 4, '2023-11-01', NULL),
 (5, 5, '2021-05-25', '2023-05-25');
+
+INSERT INTO Role (Name) VALUES
+('Admin'),
+('Manager'),
+('User'),
+('HR'),
+('Technician');
