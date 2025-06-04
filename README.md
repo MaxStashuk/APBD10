@@ -15,9 +15,14 @@ connection string. Here's the template for it (parameters can be changed):
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "AllowedHosts": "*",
+  "AllowedHosts": "*", 
   "ConnectionStrings": {
-    "DefaultConnection" : "Data Source=; Initial Catalog=; User Id=; Password=; Trust Server Certificate=true;"
+    "DefaultConnection" : "Data Source=localhost; Initial Catalog=master; User Id=sa; Password=database_CONNECTION_2025; Trust Server Certificate=true;"
+  },
+  "Jwt": {
+    "Key": "32-characters-long-JWT-secret",
+    "Issuer": "issuer-address",
+    "Audience": "audience-addreess"
   }
 }
 ```
