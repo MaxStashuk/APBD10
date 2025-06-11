@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/positions")]
 [Authorize(Policy = "UserOrAdmin")]
 public class PositionController : ControllerBase
 {

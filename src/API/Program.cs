@@ -52,7 +52,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddDbContext<MasterContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IAuthenticationService, JwtAuthenticationService>();
-builder.Services.AddScoped<IValidationService, ValidationService>();
+builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
