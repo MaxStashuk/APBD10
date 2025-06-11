@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using API.DTOs;
+using API.Middleware;
 using API.Models;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,6 +13,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? 
                        throw new InvalidOperationException("No connection string found");
@@ -45,6 +52,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddDbContext<MasterContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddScoped<IAuthenticationService, JwtAuthenticationService>();
+builder.Services.AddScoped<IValidationService, ValidationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -59,6 +67,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add validation middleware
+app.UseMiddleware<ValidationMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
